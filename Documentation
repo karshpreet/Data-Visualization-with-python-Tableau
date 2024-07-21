@@ -1,29 +1,185 @@
-# Online Retail Data Analysis
+CODE : 
+import pandas as pd
+import pandas as pd
 
-This repository contains a comprehensive analysis of an online retail dataset, focusing on understanding customer behavior and optimizing marketing strategies through data analysis and visualization.
+# Use raw string literal for the file path
+file_path = r'C:\Users\Asus\Downloads\Online Retail.xlsx'
 
-## Overview
+# Load a smaller portion of the dataset
+data_sample = pd.read_excel(file_path, nrows=100)
 
-### **Objective**
-The goal of this project is to leverage data analysis techniques to gain insights into online retail operations. This includes examining revenue trends, customer behavior, geographical performance, and customer segmentation.
+# Display the first few rows of the sample dataset
+print(data_sample.head())
 
-### **Approach**
-- **Data Exploration & Preparation**: Using Python and Pandas to clean and prepare the data.
-- **Analysis**: Understanding revenue trends, customer retention, and geographical performance.
-- **Visualization**: Presenting insights through Tableau visualizations.
+# Display basic information about the dataset
+print(data_sample.info())
 
-## Getting Started
+# Display statistical summary of the dataset
+print(data_sample.describe())
 
-### **Prerequisites**
+# Convert InvoiceDate to datetime
+data_sample['InvoiceDate'] = pd.to_datetime(data_sample['InvoiceDate'])
 
-- Python 3.x
-- Pandas
-- Tableau (for visualization)
-- Jupyter Notebook (optional, for interactive analysis)
+# Extract month and year from InvoiceDate
+data_sample['MonthYear'] = data_sample['InvoiceDate'].dt.to_period('M')
 
-### **Installation**
+# Group by MonthYear and calculate total revenue
+data_sample['Revenue'] = data_sample['Quantity'] * data_sample['UnitPrice']
+revenue_trends = data_sample.groupby('MonthYear')['Revenue'].sum().reset_index()
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/yourusername/online_retail_analysis.git
-   cd online_retail_analysis
+# Display revenue trends
+print(revenue_trends)
+
+
+# Group by Description and calculate total revenue per product
+top_products = data_sample.groupby('Description')['Revenue'].sum().reset_index()
+
+# Sort by revenue to get top products
+top_products = top_products.sort_values(by='Revenue', ascending=False).head(10)
+
+# Display top products
+print(top_products)
+
+
+# Group by CustomerID and count the number of unique InvoiceNos
+customer_retention = data_sample.groupby('CustomerID')['InvoiceNo'].nunique().reset_index()
+
+# Calculate the number of repeat buyers
+repeat_buyers = customer_retention[customer_retention['InvoiceNo'] > 1].shape[0]
+
+# Calculate total customers
+total_customers = customer_retention.shape[0]
+
+# Calculate retention rate
+retention_rate = (repeat_buyers / total_customers) * 100
+
+# Display retention rate
+print(f'Retention Rate: {retention_rate:.2f}%')
+
+
+# Group by Country and calculate total revenue per country
+geo_performance = data_sample.groupby('Country')['Revenue'].sum().reset_index()
+
+# Sort by revenue to get top countries
+geo_performance = geo_performance.sort_values(by='Revenue', ascending=False).head(10)
+
+# Display geographical performance
+print(geo_performance)
+
+
+# Count the number of purchases per customer
+purchase_counts = customer_retention['InvoiceNo'].value_counts().reset_index()
+purchase_counts.columns = ['Number of Purchases', 'Number of Customers']
+
+# Display the distribution of repeat purchases
+print(purchase_counts)
+
+
+# Merge revenue information with customer retention data
+customer_revenue = data_sample.groupby('CustomerID')['Revenue'].sum().reset_index()
+
+# Merge with customer retention to get number of purchases per customer
+customer_data = pd.merge(customer_revenue, customer_retention, on='CustomerID')
+
+# Separate repeat customers and one-time buyers
+repeat_customers = customer_data[customer_data['InvoiceNo'] > 1]
+one_time_buyers = customer_data[customer_data['InvoiceNo'] == 1]
+
+# Calculate average revenue
+average_revenue_repeat = repeat_customers['Revenue'].mean()
+average_revenue_one_time = one_time_buyers['Revenue'].mean()
+
+# Display average revenue
+print(f'Average Revenue (Repeat Customers): {average_revenue_repeat:.2f}')
+print(f'Average Revenue (One-time Buyers): {average_revenue_one_time:.2f}')
+
+
+# Define segments based on number of purchases
+def segment_customers(x):
+    if x == 1:
+        return 'One-time'
+    elif x <= 3:
+        return 'Frequent'
+    else:
+        return 'Loyal'
+
+# Apply segmentation
+customer_data['Segment'] = customer_data['InvoiceNo'].apply(segment_customers)
+
+# Calculate revenue contribution of each segment
+segment_revenue = customer_data.groupby('Segment')['Revenue'].sum().reset_index()
+
+# Display segment revenue
+print(segment_revenue)
+
+
+# Calculate churn rate
+churn_rate = ((total_customers - repeat_buyers) / total_customers) * 100
+
+# Display churn rate
+print(f'Churn Rate: {churn_rate:.2f}%')
+
+import pandas as pd
+
+# Use raw string literal for the file path
+file_path = r'C:\Users\Asus\Downloads\Online Retail.xlsx'
+
+# Load a smaller portion of the dataset
+data_sample = pd.read_excel(file_path, nrows=100)
+
+# Convert InvoiceDate to datetime
+data_sample['InvoiceDate'] = pd.to_datetime(data_sample['InvoiceDate'])
+
+# Calculate revenue
+data_sample['Revenue'] = data_sample['Quantity'] * data_sample['UnitPrice']
+
+# Group by CustomerID and count the number of unique InvoiceNos
+customer_retention = data_sample.groupby('CustomerID')['InvoiceNo'].nunique().reset_index()
+
+# Calculate the number of repeat buyers
+repeat_buyers = customer_retention[customer_retention['InvoiceNo'] > 1].shape[0]
+
+# Calculate total customers
+total_customers = customer_retention.shape[0]
+
+# Calculate retention rate
+retention_rate = (repeat_buyers / total_customers) * 100
+
+# Display retention rate
+print(f'Retention Rate: {retention_rate:.2f}%')
+
+# Distribution of repeat purchases
+purchase_counts = customer_retention['InvoiceNo'].value_counts().reset_index()
+purchase_counts.columns = ['Number of Purchases', 'Number of Customers']
+print(purchase_counts)
+
+# Average revenue per customer
+customer_revenue = data_sample.groupby('CustomerID')['Revenue'].sum().reset_index()
+customer_data = pd.merge(customer_revenue, customer_retention, on='CustomerID')
+
+repeat_customers = customer_data[customer_data['InvoiceNo'] > 1]
+one_time_buyers = customer_data[customer_data['InvoiceNo'] == 1]
+
+average_revenue_repeat = repeat_customers['Revenue'].mean()
+average_revenue_one_time = one_time_buyers['Revenue'].mean()
+
+print(f'Average Revenue (Repeat Customers): {average_revenue_repeat:.2f}')
+print(f'Average Revenue (One-time Buyers): {average_revenue_one_time:.2f}')
+
+# Customer segmentation
+def segment_customers(x):
+    if x == 1:
+        return 'One-time'
+    elif x <= 3:
+        return 'Frequent'
+    else:
+        return 'Loyal'
+
+customer_data['Segment'] = customer_data['InvoiceNo'].apply(segment_customers)
+segment_revenue = customer_data.groupby('Segment')['Revenue'].sum().reset_index()
+print(segment_revenue)
+
+# Churn rate
+churn_rate = ((total_customers - repeat_buyers) / total_customers) * 100
+print(f'Churn Rate: {churn_rate:.2f}%')
+
